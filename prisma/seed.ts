@@ -1,5 +1,4 @@
 import fs from "fs";
-import csv from "csv-parser";
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
@@ -8,74 +7,81 @@ const connectionString = `${process.env.DATABASE_URL}`;
 const adapter = new PrismaBetterSqlite3({ url: connectionString });
 const prisma = new PrismaClient({ adapter });
 
-const results: any[] = [];
-
-// derive tcg stats from physical data, map variables to game balance
-const calculateStats = (row: {
-  Weight_kg: string;
-  Height_cm: string;
-  Rating: string;
-  Name: any;
-  Birthdate: any;
-  Birthplace: any;
-  Promotion: any;
-}) => {
-  const weight = parseFloat(row.Weight_kg) || 100;
-  const height = parseFloat(row.Height_cm) || 180;
-  const rating = parseFloat(row.Rating) || 5.0;
-
-  let rarity = "COMMON";
-
-  if (rating >= 9.5) {
-    rarity = "LEGENDARY";
-  } else if (rating >= 9.0) {
-    rarity = "EPIC";
-  } else if (rating >= 8.0) {
-    rarity = "RARE";
-  } else if (rating >= 7.0) {
-    rarity = "UNCOMMON";
+// string parsing utilities for inconsistent data
+const parseDate = (dateStr: string | undefined): string => {
+  if (!dateStr) return "Unknown";
+  // transforms "06251988" to "06/25/1988"
+  if (dateStr.length === 8) {
+    return `${dateStr.slice(0, 2)}/${dateStr.slice(2, 4)}/${dateStr.slice(4)}`;
   }
-
-  return {
-    name: row.Name,
-    description: null,
-    height,
-    weight,
-    birthdate: row.Birthdate,
-    birthplace: row.Birthplace,
-    rarity,
-    alignment: "FACE",
-    promotion: row.Promotion || "Independent",
-  };
+  return dateStr;
 };
 
-async function seed() {
-  fs.createReadStream("prisma/cagematch_clean.csv")
-    .pipe(csv())
-    .on("data", (data) => results.push(data))
-    .on("end", async () => {
-      console.log(`parsing complete, seeding ${results.length} wrestlers`);
+const cleanText = (text: string | undefined): string => {
+  if (!text) return "Unknown";
+  return text.replace(/;\s*$/, "").trim();
+};
 
-      for (const row of results) {
-        if (!row.Name) continue;
+async function main() {
+  const rawData = fs.readFileSync("data/output.json", "utf-8");
+  const jsonData = JSON.parse(rawData);
 
-        const cardData = calculateStats(row);
+  // json root is an object with "item_XXX" keys, extract the values into an array
+  const wrestlers = Object.values(jsonData);
 
-        // upsert prevents duplicate entries on re-runs
-        await prisma.wrestlerCard.upsert({
-          where: { name: cardData.name },
-          update: cardData,
-          create: cardData,
-        });
-      }
+  console.log(`Parsing complete, seeding ${wrestlers.length} wrestlers.`);
 
-      console.log("database seeded");
-      await prisma.$disconnect();
+  for (const item of wrestlers as any[]) {
+    if (!item.name) continue;
+
+    const attr = item.attr || {};
+
+    // extract promotion array to comma-separated string
+    const currentPromotions = attr["Current Promotion"] || [];
+    const promotion = (() => {
+      if (Array.isArray(currentPromotions) && currentPromotions.length > 0) return currentPromotions.join(", ");
+      if (!Array.isArray(currentPromotions) && currentPromotions) return currentPromotions || "";
+
+      return "";
+    })();
+
+    // standardizing metrics: converting lbs to kg for the integer field
+    const rawWeightLbs = parseInt(attr["Weight (lbs)"], 10) || 200;
+    const weightKg = Math.round(rawWeightLbs * 0.453592);
+    const heightCm = parseInt(attr["Height (cm)"], 10) || 180;
+
+    // validate alignment enum equivalent
+    const alignmentRaw = attr["Face / Heel"]?.toUpperCase();
+    const alignment = ["FACE", "HEEL", "TWEENER"].includes(alignmentRaw) ? alignmentRaw : "FACE";
+
+    const cardData = {
+      name: item.name,
+      description: attr["Finishing Moves"] ? `Finishers: ${cleanText(attr["Finishing Moves"])}` : null,
+      height: heightCm,
+      weight: weightKg,
+      birthdate: parseDate(attr["Birthday"]),
+      birthplace: cleanText(attr["Billed From (Location)"]),
+      rarity: "COMMON",
+      alignment,
+      promotion,
+      imageUrl: item.thumbnail || null,
+    };
+
+    await prisma.wrestlerCard.upsert({
+      where: { name: cardData.name },
+      update: cardData,
+      create: cardData,
     });
+  }
+
+  console.log("Database seeded.");
 }
 
-seed().catch(async (e) => {
-  console.error(e);
-  await prisma.$disconnect();
-  process.exit(1);
-});
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
