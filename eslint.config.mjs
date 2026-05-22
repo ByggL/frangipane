@@ -13,6 +13,11 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    linterOptions: {
+      "no-explicit-any": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

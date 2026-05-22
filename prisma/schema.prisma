@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model WrestlerCard {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  
+  // core stats
+  height Int
+  weight Int
+  birthdate String
+  birthplace String
+
+  // categorization
+  rarity      String    @default("COMMON")
+  alignment   String    @default("FACE")
+  promotion   String?
+  
+  // metadata
+  imageUrl    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
