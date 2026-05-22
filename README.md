@@ -29,8 +29,25 @@ Un espace dédié pour consulter les cartes obtenues.
 
 - Proxy d'images intégré pour contourner les restrictions de partage de ressources (CORS) et assurer le chargement des portraits.
 - Tri intelligent priorisant les entrées disposant de visuels.
-- Tirage de cartes aléatoire pondéré selon la rareté des cartes.
-- Données obtenues par scraping web de bases de données de catcheurs.
+- Tirage de cartes aléatoire géré côté serveur via Prisma.
+- Architecture multi-pages avec navigation fluide et esthétique sombre premium.
+
+## Mise en cache
+
+### Mise en cache du proxy d'images
+
+Le point de terminaison `/api/proxy` implémente une directive `Cache-Control: "public, max-age=86400, s-maxage=86400"`.
+Les images sont mises en cache par le navigateur et les CDN pendant 24 heures.
+Cette approche réduit la latence lors de la navigation dans la galerie et limite les requêtes répétées vers les serveurs externes.
+
+### Persistance de la collection en local
+
+La collection personnelle de l'utilisateur est gérée via `localStorage`. Les données des cartes tirées sont stockées directement dans le navigateur sous la clé `wrestler_collection`.
+Cela permet un accès instantané à la collection sans nécessiter d'appels API supplémentaires pour le prototype actuel.
+
+### Optimisation des requêtes API
+
+L'utilisation de la pagination côté serveur (`skip` et `take` dans Prisma) fait que seules les données nécessaires sont transférées, ce qui gère mieux la mémoire pour les grands jeux de données.
 
 ## Stack Technique
 
@@ -53,7 +70,3 @@ Un espace dédié pour consulter les cartes obtenues.
    npm run dev
 
 L'application sera accessible à l'adresse http://localhost:3000.
-
-_Like si tu aimes John Cena, ignore pour te prendre un Burning Hammer_
-
-![gif](https://media1.tenor.com/m/iawAFZdrA6sAAAAd/burning-hammer.gif)
