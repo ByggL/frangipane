@@ -25,13 +25,35 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <header>
-        <nav>
-          <Link href="/">Home</Link>
-          <Link href="/sam">Page</Link>
-        </nav>
-      </header>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#0a0a0a]">
+        <header className="fixed top-0 left-0 right-0 z-[100] px-8 py-6">
+          <nav className="max-w-7xl mx-auto flex items-center justify-between">
+            <Link href="/" className="group flex items-center gap-3">
+              <div className="w-8 h-8 bg-white text-black flex items-center justify-center font-black rounded-lg group-hover:rotate-12 transition-transform">W</div>
+              <span className="text-white font-serif font-black uppercase tracking-tighter text-xl">Wrestler TCG</span>
+            </Link>
+            
+            <div className="flex items-center gap-8 bg-white/[0.03] backdrop-blur-xl border border-white/5 px-6 py-2.5 rounded-full shadow-2xl">
+              <Link href="/" className="text-zinc-400 hover:text-white transition-colors uppercase font-black tracking-widest text-[10px]">Home</Link>
+              <span className="w-1 h-1 bg-zinc-800 rounded-full"></span>
+              <Link href="/roster" className="text-zinc-400 hover:text-white transition-colors uppercase font-black tracking-widest text-[10px]">The Vault</Link>
+              <span className="w-1 h-1 bg-zinc-800 rounded-full"></span>
+              <Link href="/pull" className="text-zinc-400 hover:text-white transition-colors uppercase font-black tracking-widest text-[10px]">Open Pack</Link>
+              <span className="w-1 h-1 bg-zinc-800 rounded-full"></span>
+              <Link href="/collection" className="text-zinc-400 hover:text-white transition-colors uppercase font-black tracking-widest text-[10px]">My Collection</Link>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-full border border-white/5 bg-zinc-900 flex items-center justify-center cursor-not-allowed opacity-50">
+                <div className="h-1.5 w-1.5 bg-zinc-700 rounded-full"></div>
+              </div>
+            </div>
+          </nav>
+        </header>
+        <div className="pt-20 flex-1 flex flex-col">
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

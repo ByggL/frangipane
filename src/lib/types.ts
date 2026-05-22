@@ -9,4 +9,7 @@ export type Card = {
   rarity: string;
   alignment: string;
   promotion: string | null;
+  imageUrl: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 };

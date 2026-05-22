@@ -1,6 +1,7 @@
 import fs from "fs";
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { calculateScore } from "@/lib/utils";
 
 const connectionString = `${process.env.DATABASE_URL}`;
 
@@ -54,6 +55,15 @@ async function main() {
     const alignmentRaw = attr["Face / Heel"]?.toUpperCase();
     const alignment = ["FACE", "HEEL", "TWEENER"].includes(alignmentRaw) ? alignmentRaw : "FACE";
 
+    const finalScore = calculateScore(attr);
+
+    let rarity = "COMMON";
+    if (finalScore > 90)
+      rarity = "LEGENDARY"; // Adjusted thresholds for multiplier scaling
+    else if (finalScore > 75) rarity = "EPIC";
+    else if (finalScore > 55) rarity = "RARE";
+    else if (finalScore > 35) rarity = "UNCOMMON";
+
     const cardData = {
       name: item.name,
       description: attr["Finishing Moves"] ? `Finishers: ${cleanText(attr["Finishing Moves"])}` : null,
@@ -61,7 +71,7 @@ async function main() {
       weight: weightKg,
       birthdate: parseDate(attr["Birthday"]),
       birthplace: cleanText(attr["Billed From (Location)"]),
-      rarity: "COMMON",
+      rarity,
       alignment,
       promotion,
       imageUrl: item.thumbnail || null,
