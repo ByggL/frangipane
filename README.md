@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Roster TCG Wrestler
 
-## Getting Started
+Ce projet est une application web fullstack de collection, de gestion et de tirage de cartes à collectionner de catcheurs (TCG). Elle permet aux utilisateurs de naviguer dans une base de données exhaustive de catcheurs, d'ouvrir des paquets de cartes et de constituer leur propre collection en espérant obtenir les cartes les plus rares.
 
-First, run the development server:
+## Fonctionnalités Principales
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Galerie des cartes
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Une vue d'ensemble de toutes les cartes de catcheurs disponibles dans la base de données (plus de 2000), avec filtrage, tri et pagination.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Ouverture de paquets de cartes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Un système de tirage aléatoire géré côté serveur.
 
-## Learn More
+- Tirage de 10 cartes aléatoires par paquet.
+- Algorithme de tirage de cartes équilibré.
+- Sauvegarde des cartes tirées dans la collection locale de l'utilisateur (stockage côté serveur par compte plus tard).
+- Différents types de paquets à ouvrir avec différentes cartes et probabilités.
 
-To learn more about Next.js, take a look at the following resources:
+### Collection personnelle
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Un espace dédié pour consulter les cartes obtenues.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Gestion via le stockage local (localStorage).
+- Outils de recherche et de tri pour organiser sa collection privée.
+- Plus tard : stockage côté serveur avec compte utilisateur.
 
-## Deploy on Vercel
+### Détails techniques
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Proxy d'images intégré pour contourner les restrictions de partage de ressources (CORS) et assurer le chargement des portraits.
+- Tri intelligent priorisant les entrées disposant de visuels.
+- Tirage de cartes aléatoire pondéré selon la rareté des cartes.
+- Données obtenues par scraping web de bases de données de catcheurs.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Stack Technique
+
+- Framework : Next.js
+- Langage : TypeScript
+- Base de données : SQLite
+- ORM : Prisma
+- Style : Tailwind CSS
+
+## Installation et Lancement
+
+1. Installation des dépendances :
+   npm install
+
+2. Initialisation de la base de données :
+   npx prisma generate
+   npx prisma db push
+
+3. Lancement de l'environnement de développement :
+   npm run dev
+
+L'application sera accessible à l'adresse http://localhost:3000.
+
+_Like si tu aimes John Cena, ignore pour te prendre un Burning Hammer_
+
+![gif](https://media1.tenor.com/m/iawAFZdrA6sAAAAd/burning-hammer.gif)
