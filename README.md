@@ -1,5 +1,7 @@
 # Roster TCG Wrestler
 
+Eliot Louys - Samuel Léobon
+
 Ce projet est une application web fullstack de collection, de gestion et de tirage de cartes à collectionner de catcheurs (TCG). Elle permet aux utilisateurs de naviguer dans une base de données exhaustive de catcheurs, d'ouvrir des paquets de cartes et de constituer leur propre collection en espérant obtenir les cartes les plus rares.
 
 ## Fonctionnalités Principales
