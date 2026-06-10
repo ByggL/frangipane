@@ -2,57 +2,8 @@
 
 import { Card } from "@/lib/types";
 import { useEffect, useState } from "react";
-
-const getRarityStyles = (rarity: string) => {
-  switch (rarity.toUpperCase()) {
-    case "COMMON":
-      return {
-        border: "border-zinc-700",
-        glow: "shadow-zinc-900/50",
-        text: "text-zinc-400",
-        accent: "bg-zinc-800",
-        bg: "bg-zinc-900",
-      };
-    case "RARE":
-      return {
-        border: "border-blue-500/50",
-        glow: "shadow-blue-900/40",
-        text: "text-blue-400",
-        accent: "bg-blue-900/30",
-        bg: "bg-slate-900",
-      };
-    case "EPIC":
-      return {
-        border: "border-purple-500/50",
-        glow: "shadow-purple-900/40",
-        text: "text-purple-400",
-        accent: "bg-purple-900/30",
-        bg: "bg-neutral-900",
-      };
-    case "LEGENDARY":
-      return {
-        border: "border-amber-500/60",
-        glow: "shadow-amber-900/40",
-        text: "text-amber-400",
-        accent: "bg-amber-900/30",
-        bg: "bg-stone-900",
-      };
-    default:
-      return {
-        border: "border-zinc-800",
-        glow: "shadow-black",
-        text: "text-zinc-500",
-        accent: "bg-zinc-900",
-        bg: "bg-black",
-      };
-  }
-};
-
-const getAlignmentBadge = (alignment: string) => {
-  return alignment.toUpperCase() === "FACE"
-    ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
-    : "bg-rose-500/20 text-rose-400 border border-rose-500/30";
-};
+import Link from "next/link";
+import { getRarityStyles, getAlignmentBadge } from "@/lib/utils";
 
 export default function Page() {
   const [cards, setCards] = useState<Card[]>([]);
@@ -201,8 +152,9 @@ export default function Page() {
           {cards.map((card) => {
             const styles = getRarityStyles(card.rarity);
             return (
-              <div
+              <Link
                 key={card.id}
+                href={`/roster/${card.id}`}
                 className={`group relative flex flex-col h-[460px] rounded-2xl border-2 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer overflow-hidden ${styles.bg} ${styles.border} ${styles.glow}`}
               >
                 {/* Subtle Gradient Overlay */}
@@ -275,7 +227,7 @@ export default function Page() {
 
                 {/* Interactive Scanlines Effect */}
                 <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,0,0.01),rgba(0,0,255,0.02))] bg-[length:100%_2px,3px_100%] opacity-20 group-hover:opacity-30 transition-opacity"></div>
-              </div>
+              </Link>
             );
           })}
         </div>

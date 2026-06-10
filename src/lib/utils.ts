@@ -51,3 +51,54 @@ export function calculateScore(attr: any): number {
   // Cap at 100 for balance
   return Math.min(finalScore, 100);
 }
+
+export const getRarityStyles = (rarity: string) => {
+  switch (rarity?.toUpperCase()) {
+    case "COMMON":
+      return {
+        border: "border-zinc-700",
+        glow: "shadow-zinc-900/50",
+        text: "text-zinc-400",
+        accent: "bg-zinc-800",
+        bg: "bg-zinc-900",
+      };
+    case "RARE":
+      return {
+        border: "border-blue-500/50",
+        glow: "shadow-blue-900/40",
+        text: "text-blue-400",
+        accent: "bg-blue-900/30",
+        bg: "bg-slate-900",
+      };
+    case "EPIC":
+      return {
+        border: "border-purple-500/50",
+        glow: "shadow-purple-900/40",
+        text: "text-purple-400",
+        accent: "bg-purple-900/30",
+        bg: "bg-neutral-900",
+      };
+    case "LEGENDARY":
+      return {
+        border: "border-amber-500/60",
+        glow: "shadow-amber-900/40",
+        text: "text-amber-400",
+        accent: "bg-amber-900/30",
+        bg: "bg-stone-900",
+      };
+    default:
+      return {
+        border: "border-zinc-800",
+        glow: "shadow-black",
+        text: "text-zinc-500",
+        accent: "bg-zinc-900",
+        bg: "bg-black",
+      };
+  }
+};
+
+export const getAlignmentBadge = (alignment: string) => {
+  return alignment?.toUpperCase() === "FACE"
+    ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
+    : "bg-rose-500/20 text-rose-400 border border-rose-500/30";
+};

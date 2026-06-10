@@ -2,57 +2,8 @@
 
 import { Card } from "@/lib/types";
 import { useEffect, useState } from "react";
-
-const getRarityStyles = (rarity: string) => {
-  switch (rarity.toUpperCase()) {
-    case "COMMON":
-      return {
-        border: "border-zinc-700",
-        glow: "shadow-zinc-900/50",
-        text: "text-zinc-400",
-        accent: "bg-zinc-800",
-        bg: "bg-zinc-900"
-      };
-    case "RARE":
-      return {
-        border: "border-blue-500/50",
-        glow: "shadow-blue-900/40",
-        text: "text-blue-400",
-        accent: "bg-blue-900/30",
-        bg: "bg-slate-900"
-      };
-    case "EPIC":
-      return {
-        border: "border-purple-500/50",
-        glow: "shadow-purple-900/40",
-        text: "text-purple-400",
-        accent: "bg-purple-900/30",
-        bg: "bg-neutral-900"
-      };
-    case "LEGENDARY":
-      return {
-        border: "border-amber-500/60",
-        glow: "shadow-amber-900/40",
-        text: "text-amber-400",
-        accent: "bg-amber-900/30",
-        bg: "bg-stone-900"
-      };
-    default:
-      return {
-        border: "border-zinc-800",
-        glow: "shadow-black",
-        text: "text-zinc-500",
-        accent: "bg-zinc-900",
-        bg: "bg-black"
-      };
-  }
-};
-
-const getAlignmentBadge = (alignment: string) => {
-  return alignment.toUpperCase() === "FACE" 
-    ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30" 
-    : "bg-rose-500/20 text-rose-400 border border-rose-500/30";
-};
+import Link from "next/link";
+import { getRarityStyles, getAlignmentBadge } from "@/lib/utils";
 
 export default function CollectionPage() {
   const [collection, setCollection] = useState<Card[]>([]);
@@ -162,8 +113,9 @@ export default function CollectionPage() {
             {filteredCollection.map((card, idx) => {
               const styles = getRarityStyles(card.rarity);
               return (
-                <div
+                <Link
                   key={`${card.id}-${idx}`}
+                  href={`/roster/${card.id}`}
                   className={`group relative flex flex-col h-[460px] rounded-2xl border-2 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer overflow-hidden ${styles.bg} ${styles.border} ${styles.glow}`}
                 >
                   <div className="p-4 flex justify-between items-start z-10">
@@ -201,7 +153,7 @@ export default function CollectionPage() {
                       <span>{card.weight} kg</span>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
@@ -220,5 +172,3 @@ export default function CollectionPage() {
     </main>
   );
 }
-
-import Link from "next/link";
