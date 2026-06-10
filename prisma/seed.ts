@@ -55,6 +55,9 @@ async function main() {
     const alignmentRaw = attr["Face / Heel"]?.toUpperCase();
     const alignment = ["FACE", "HEEL", "TWEENER"].includes(alignmentRaw) ? alignmentRaw : "FACE";
 
+    const genderRaw = attr["Gender"] || "Male";
+    const gender = ["Male", "Female"].includes(genderRaw) ? genderRaw : "Male";
+
     const finalScore = calculateScore(attr);
 
     let rarity = "COMMON";
@@ -72,6 +75,7 @@ async function main() {
       birthdate: parseDate(attr["Birthday"]),
       birthplace: cleanText(attr["Billed From (Location)"]),
       rarity,
+      gender,
       alignment,
       promotion,
       imageUrl: item.thumbnail || null,

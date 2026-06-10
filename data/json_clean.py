@@ -64,9 +64,32 @@ def process_file(input_path, output_path):
         
     cleaned_data = clean_json(data)
     
+    # Filter data: only wrestlers from WWE, AEW, NJPW, or TNA
+    filtered_data = {}
+    target_promotions = {"WWE", "AEW", "NJPW"}
+    
+    for key, item in cleaned_data.items():
+        if not isinstance(item, dict):
+            continue
+            
+        attr = item.get("attr", {})
+        all_promos = attr.get("All-Time Promotions", [])
+        
+        # Normalize to list
+        if isinstance(all_promos, str):
+            all_promos = [all_promos]
+        elif not isinstance(all_promos, list):
+            all_promos = []
+            
+        # Check if any target promotion is in the list
+        if any(str(p).upper() in target_promotions for p in all_promos):
+            filtered_data[key] = item
+
+    print(f"Filtered from {len(cleaned_data)} to {len(filtered_data)} items.")
+    
     with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(cleaned_data, f, indent=4)
+        json.dump(filtered_data, f, indent=4)
 
 # usage example
 if __name__ == "__main__":
-    process_file("input.json", "output.json")
+    process_file("data/input.json", "data/output.json")

@@ -4,6 +4,7 @@ import { Card } from "@/lib/types";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getRarityStyles, getAlignmentBadge } from "@/lib/utils";
+import Image from "next/image";
 
 export default function CollectionPage() {
   const [collection, setCollection] = useState<(Card & { quantity: number })[]>([]);
@@ -17,8 +18,8 @@ export default function CollectionPage() {
 
   useEffect(() => {
     fetch("/api/user/collection")
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (Array.isArray(data)) {
           setCollection(data);
           setFilteredCollection(data);
@@ -34,24 +35,27 @@ export default function CollectionPage() {
     // Search filter
     if (search) {
       const term = search.toLowerCase();
-      result = result.filter(c => 
-        c.name.toLowerCase().includes(term) || 
-        (c.promotion && c.promotion.toLowerCase().includes(term))
+      result = result.filter(
+        (c) => c.name.toLowerCase().includes(term) || (c.promotion && c.promotion.toLowerCase().includes(term)),
       );
     }
 
     // Rarity filter
     if (rarityFilter !== "ALL") {
-      result = result.filter(c => c.rarity.toUpperCase() === rarityFilter);
+      result = result.filter((c) => c.rarity.toUpperCase() === rarityFilter);
     }
 
     // Sorting
     result.sort((a, b) => {
       switch (sortBy) {
-        case "NAME_ASC": return a.name.localeCompare(b.name);
-        case "NAME_DESC": return b.name.localeCompare(a.name);
-        case "DATE_DESC": return 0; // LocalStorage doesn't keep dates by default, but we could add them
-        default: return 0;
+        case "NAME_ASC":
+          return a.name.localeCompare(b.name);
+        case "NAME_DESC":
+          return b.name.localeCompare(a.name);
+        case "DATE_DESC":
+          return 0; // LocalStorage doesn't keep dates by default, but we could add them
+        default:
+          return 0;
       }
     });
 
@@ -71,26 +75,24 @@ export default function CollectionPage() {
   return (
     <main className="relative p-8 bg-[#0a0a0a] min-h-screen overflow-hidden">
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
-      
+
       <div className="max-w-7xl mx-auto relative z-10">
         <header className="mb-12 text-center">
           <h1 className="text-7xl font-black uppercase tracking-tight text-white font-serif mb-4 drop-shadow-2xl">
             My <span className="text-zinc-500">Collection</span>
           </h1>
-          <p className="text-zinc-500 font-serif italic text-lg tracking-wide mb-8">
-            Your Personal Elite Roster
-          </p>
+          <p className="text-zinc-500 font-serif italic text-lg tracking-wide mb-8">Your Personal Elite Roster</p>
 
           <div className="flex flex-wrap items-center justify-center gap-6 p-6 bg-zinc-900/50 backdrop-blur-xl rounded-2xl border border-white/5 shadow-2xl mb-8">
-            <input 
-              type="text" 
-              placeholder="Search your collection..." 
+            <input
+              type="text"
+              placeholder="Search your collection..."
               className="bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-cyan-500/50 transition-colors w-64"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            
-            <select 
+
+            <select
               className="bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none cursor-pointer pr-10"
               value={rarityFilter}
               onChange={(e) => setRarityFilter(e.target.value)}
@@ -102,7 +104,7 @@ export default function CollectionPage() {
               <option value="LEGENDARY">LEGENDARY</option>
             </select>
 
-            <select 
+            <select
               className="bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none cursor-pointer pr-10"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -122,7 +124,7 @@ export default function CollectionPage() {
                 <Link
                   key={`${card.id}-${idx}`}
                   href={`/roster/${card.id}`}
-                  className={`group relative flex flex-col h-[460px] rounded-2xl border-2 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer overflow-hidden ${styles.bg} ${styles.border} ${styles.glow}`}
+                  className={`group relative flex flex-col h-115 rounded-2xl border-2 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer overflow-hidden ${styles.bg} ${styles.border} ${styles.glow}`}
                 >
                   {card.quantity > 1 && (
                     <div className="absolute top-4 right-4 z-20 bg-white text-black px-2 py-1 rounded-md text-[10px] font-black">
@@ -134,7 +136,9 @@ export default function CollectionPage() {
                       <h2 className="font-serif font-bold text-lg leading-none text-zinc-100 group-hover:text-white transition-colors">
                         {card.name}
                       </h2>
-                      <span className={`text-[9px] w-fit px-2 py-0.5 rounded-full font-black uppercase tracking-tighter ${getAlignmentBadge(card.alignment)}`}>
+                      <span
+                        className={`text-[9px] w-fit px-2 py-0.5 rounded-full font-black uppercase tracking-tighter ${getAlignmentBadge(card.alignment)}`}
+                      >
                         {card.alignment}
                       </span>
                     </div>
@@ -142,23 +146,29 @@ export default function CollectionPage() {
 
                   <div className="relative flex-1 mx-4 mb-2 rounded-xl overflow-hidden bg-zinc-950 border border-white/5 shadow-2xl">
                     {card.imageUrl ? (
-                      <img
+                      <Image
                         src={`/api/proxy?url=${encodeURIComponent(card.imageUrl)}`}
                         alt={card.name}
-                        className="w-full h-full object-cover object-top opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
+                        className="object-cover object-top opacity-80 group-hover:opacity-100 transition-opacity duration-500"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center opacity-10">
                         <span className="text-4xl font-serif font-black text-white italic">VOID</span>
                       </div>
                     )}
-                    <div className={`absolute bottom-2 right-2 px-2 py-1 rounded border border-white/10 text-[9px] font-black tracking-widest uppercase backdrop-blur-md ${styles.accent} ${styles.text}`}>
+                    <div
+                      className={`absolute bottom-2 right-2 px-2 py-1 rounded border border-white/10 text-[9px] font-black tracking-widest uppercase backdrop-blur-md ${styles.accent} ${styles.text}`}
+                    >
                       {card.rarity}
                     </div>
                   </div>
 
                   <div className="p-5 bg-black/40 backdrop-blur-sm z-10 border-t border-white/5">
-                    <p className="font-serif text-xs text-zinc-400 italic truncate mb-2">{card.promotion || "Independent"}</p>
+                    <p className="font-serif text-xs text-zinc-400 italic truncate mb-2">
+                      {card.promotion || "Independent"}
+                    </p>
                     <div className="grid grid-cols-2 gap-2 text-[10px] uppercase font-black tracking-tighter text-zinc-600">
                       <span>{card.height} cm</span>
                       <span>{card.weight} kg</span>
@@ -171,8 +181,8 @@ export default function CollectionPage() {
         ) : (
           <div className="text-center py-24 border-2 border-dashed border-zinc-900 rounded-3xl">
             <p className="text-zinc-600 font-serif italic text-xl mb-6">Your vault is currently empty.</p>
-            <Link 
-              href="/pull" 
+            <Link
+              href="/pull"
               className="px-8 py-3 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-transform inline-block"
             >
               Go Pull Some Cards

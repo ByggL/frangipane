@@ -22,7 +22,7 @@ export function calculateScore(attr: any): number {
 
   // 2. Experience Density (Max 30) - Lowered slightly to make room for multiplier
   const promoCount = Array.isArray(attr["All-Time Promotions"]) ? attr["All-Time Promotions"].length : 0;
-  baseScore += Math.min(promoCount * 3, 30);
+  baseScore += Math.min(promoCount * 3, 20);
 
   // 3. Technical Versatility (Max 20)
   const finisherString = attr["Finishing Moves"] || "";
@@ -30,7 +30,7 @@ export function calculateScore(attr: any): number {
   baseScore += Math.min(finishers.length * 4, 20);
 
   // 4. Role (Max 10)
-  if (attr["Current Role"] === "Wrestler") baseScore += 10;
+  if (attr["Current Role"] === "Wrestler") baseScore += 15;
 
   // 5. Promotion Multiplier Logic
   const allPromos = attr["All-Time Promotions"] || [];
@@ -60,6 +60,14 @@ export const getRarityStyles = (rarity: string) => {
         glow: "shadow-zinc-900/50",
         text: "text-zinc-400",
         accent: "bg-zinc-800",
+        bg: "bg-zinc-900",
+      };
+    case "UNCOMMON":
+      return {
+        border: "border-emerald-500/50",
+        glow: "shadow-emerald-900/40",
+        text: "text-emerald-400",
+        accent: "bg-emerald-900/30",
         bg: "bg-zinc-900",
       };
     case "RARE":

@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -13,39 +8,34 @@ datasource db {
 }
 
 model WrestlerCard {
-  id          String    @id @default(uuid())
-  name        String    @unique
+  id          String     @id @default(uuid())
+  name        String     @unique
   description String?
-  
-  // core stats
-  height Int
-  weight Int
-  birthdate String
-  birthplace String
-
-  // categorization
-  rarity      String    @default("COMMON")
-  alignment   String    @default("FACE")
+  height      Int
+  weight      Int
+  birthdate   String
+  birthplace  String
+  rarity      String     @default("COMMON")
+  gender      String     @default("Male")
+  alignment   String     @default("FACE")
   promotion   String?
-  
-  // metadata
   imageUrl    String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   owners      UserCard[]
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?    @unique
   emailVerified DateTime?
   image         String?
-  username      String?   @unique
+  username      String?    @unique
   password      String?
-  money         Int       @default(1000)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  money         Int        @default(1000)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   accounts      Account[]
   sessions      Session[]
   cards         UserCard[]
@@ -64,8 +54,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -87,15 +76,14 @@ model VerificationToken {
 }
 
 model UserCard {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   userId    String
   cardId    String
-  quantity  Int      @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user      User         @relation(fields: [userId], references: [id])
+  quantity  Int          @default(1)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
   card      WrestlerCard @relation(fields: [cardId], references: [id])
+  user      User         @relation(fields: [userId], references: [id])
 
   @@unique([userId, cardId])
 }

@@ -29,7 +29,7 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-[#0a0a0a]">
         <Providers>
-          <header className="fixed top-0 left-0 right-0 z-[100] px-8 py-6">
+          <header className="fixed top-0 left-0 right-0 z-100 px-8 py-6">
             <nav className="max-w-7xl mx-auto flex items-center justify-between">
               <Link href="/" className="group flex items-center gap-3">
                 <div className="w-8 h-8 bg-white text-black flex items-center justify-center font-black rounded-lg group-hover:rotate-12 transition-transform">
@@ -40,7 +40,7 @@ export default function RootLayout({
                 </span>
               </Link>
 
-              <div className="flex items-center gap-8 bg-white/[0.03] backdrop-blur-xl border border-white/5 px-6 py-2.5 rounded-full shadow-2xl">
+              <div className="flex items-center gap-8 bg-white/3 backdrop-blur-xl border border-white/5 px-6 py-2.5 rounded-full shadow-2xl">
                 <Link
                   href="/"
                   className="text-zinc-400 hover:text-white transition-colors uppercase font-black tracking-widest text-[10px]"
