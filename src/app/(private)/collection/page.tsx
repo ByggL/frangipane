@@ -1,72 +1,61 @@
-"use client";
-
-import { Card } from "@/lib/types";
-import { useEffect, useState } from "react";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import Link from "next/link";
 import { getRarityStyles, getAlignmentBadge } from "@/lib/utils";
+import CollectionFilters from "./CollectionFilters";
+import { redirect } from "next/navigation";
+import { Prisma } from "@/generated/prisma/client";
 
-export default function CollectionPage() {
-  const [collection, setCollection] = useState<(Card & { quantity: number })[]>([]);
-  const [filteredCollection, setFilteredCollection] = useState<(Card & { quantity: number })[]>([]);
-  const [loading, setLoading] = useState(true);
+export default async function CollectionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
 
-  // Filter & Sort State
-  const [search, setSearch] = useState("");
-  const [rarityFilter, setRarityFilter] = useState("ALL");
-  const [sortBy, setSortBy] = useState("DATE_DESC");
+  const params = await searchParams;
+  const search = (params.search as string) || "";
+  const rarity = (params.rarity as string) || "ALL";
+  const sortBy = (params.sortBy as string) || "DATE_DESC";
 
-  useEffect(() => {
-    fetch("/api/user/collection")
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setCollection(data);
-          setFilteredCollection(data);
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    let result = [...collection];
-
-    // Search filter
-    if (search) {
-      const term = search.toLowerCase();
-      result = result.filter(c => 
-        c.name.toLowerCase().includes(term) || 
-        (c.promotion && c.promotion.toLowerCase().includes(term))
-      );
+  // Build where clause
+  const where: Prisma.UserCardWhereInput = {
+    userId: (session.user as any).id,
+    card: {
+      AND: [
+        search ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { promotion: { contains: search, mode: 'insensitive' } },
+          ]
+        } : {},
+        rarity !== "ALL" ? { rarity: { equals: rarity } } : {},
+      ]
     }
+  };
 
-    // Rarity filter
-    if (rarityFilter !== "ALL") {
-      result = result.filter(c => c.rarity.toUpperCase() === rarityFilter);
-    }
-
-    // Sorting
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case "NAME_ASC": return a.name.localeCompare(b.name);
-        case "NAME_DESC": return b.name.localeCompare(a.name);
-        case "DATE_DESC": return 0; // LocalStorage doesn't keep dates by default, but we could add them
-        default: return 0;
-      }
-    });
-
-    setFilteredCollection(result);
-  }, [search, rarityFilter, sortBy, collection]);
-
-  if (loading) {
-    return (
-      <main className="p-8 flex items-center justify-center min-h-screen bg-[#0a0a0a]">
-        <div className="text-3xl font-serif italic animate-pulse text-zinc-700 tracking-widest uppercase">
-          Loading Collection...
-        </div>
-      </main>
-    );
+  // Determine sort
+  let orderBy: Prisma.UserCardOrderByWithRelationInput = {};
+  switch (sortBy) {
+    case "NAME_ASC": orderBy = { card: { name: "asc" } }; break;
+    case "NAME_DESC": orderBy = { card: { name: "desc" } }; break;
+    case "DATE_DESC": orderBy = { updatedAt: "desc" }; break;
+    default: orderBy = { updatedAt: "desc" };
   }
+
+  const userCards = await prisma.userCard.findMany({
+    where,
+    include: {
+      card: true,
+    },
+    orderBy,
+  });
+
+  const collection = userCards.map((uc) => ({
+    ...uc.card,
+    quantity: uc.quantity,
+  }));
 
   return (
     <main className="relative p-8 bg-[#0a0a0a] min-h-screen overflow-hidden">
@@ -81,42 +70,12 @@ export default function CollectionPage() {
             Your Personal Elite Roster
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-6 p-6 bg-zinc-900/50 backdrop-blur-xl rounded-2xl border border-white/5 shadow-2xl mb-8">
-            <input 
-              type="text" 
-              placeholder="Search your collection..." 
-              className="bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-cyan-500/50 transition-colors w-64"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            
-            <select 
-              className="bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none cursor-pointer pr-10"
-              value={rarityFilter}
-              onChange={(e) => setRarityFilter(e.target.value)}
-            >
-              <option value="ALL">ALL CLASSES</option>
-              <option value="COMMON">COMMON</option>
-              <option value="RARE">RARE</option>
-              <option value="EPIC">EPIC</option>
-              <option value="LEGENDARY">LEGENDARY</option>
-            </select>
-
-            <select 
-              className="bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-cyan-500/50 transition-colors appearance-none cursor-pointer pr-10"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="DATE_DESC">NEWEST FIRST</option>
-              <option value="NAME_ASC">NAME (A-Z)</option>
-              <option value="NAME_DESC">NAME (Z-A)</option>
-            </select>
-          </div>
+          <CollectionFilters search={search} rarity={rarity} sortBy={sortBy} />
         </header>
 
-        {filteredCollection.length > 0 ? (
+        {collection.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-10">
-            {filteredCollection.map((card, idx) => {
+            {collection.map((card, idx) => {
               const styles = getRarityStyles(card.rarity);
               return (
                 <Link
