@@ -3,49 +3,54 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 
-interface User {
+interface UserData {
   id: string;
   username: string;
   money: number;
 }
 
 export default function UserMenu() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [loadingData, setLoadingData] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchUser = () => {
+  const fetchUserExtraData = () => {
+    if (status === "authenticated") {
+      setLoadingData(true);
       fetch("/api/user/me")
         .then((res) => res.json())
         .then((data) => {
-          setUser(data.user);
-          setLoading(false);
+          setUserData(data.user);
+          setLoadingData(false);
         })
-        .catch(() => setLoading(false));
-    };
+        .catch(() => setLoadingData(false));
+    } else {
+      setUserData(null);
+    }
+  };
 
-    fetchUser();
-
-    window.addEventListener("user-updated", fetchUser);
-    return () => window.removeEventListener("user-updated", fetchUser);
-  }, []);
+  useEffect(() => {
+    fetchUserExtraData();
+    window.addEventListener("user-updated", fetchUserExtraData);
+    return () => window.removeEventListener("user-updated", fetchUserExtraData);
+  }, [status]);
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setUser(null);
+    await signOut({ redirect: false });
     router.push("/");
     router.refresh();
   };
 
-  if (loading) {
+  if (status === "loading" || loadingData) {
     return (
       <div className="h-10 px-4 bg-white/5 animate-pulse rounded-full"></div>
     );
   }
 
-  if (!user) {
+  if (status === "unauthenticated") {
     return (
       <div className="flex items-center gap-4">
         <Link
@@ -68,10 +73,10 @@ export default function UserMenu() {
     <div className="flex items-center gap-4">
       <div className="flex flex-col items-end">
         <span className="text-white text-[10px] font-black uppercase tracking-widest">
-          {user.username}
+          {userData?.username || session?.user?.name}
         </span>
         <span className="text-yellow-500 text-[10px] font-black uppercase tracking-widest">
-          ${user.money.toLocaleString()}
+          ${userData?.money.toLocaleString() || "0"}
         </span>
       </div>
       <button

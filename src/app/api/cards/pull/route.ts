@@ -1,24 +1,24 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { auth,getSession } from "@/lib/auth";
+
 
 const PULL_COST = 100;
 
 export async function POST() {
   try {
-    const session = await getSession();
-    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user and check money
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: (session.user as any).id },
     });
 
     if (!user || user.money < PULL_COST) {
       return NextResponse.json({ error: "Insufficient funds" }, { status: 400 });
     }
+
 
     // Get total count of cards
     const count = await prisma.wrestlerCard.count();

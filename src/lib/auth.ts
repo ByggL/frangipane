@@ -1,58 +1,68 @@
-import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+import NextAuth from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/lib/prisma";
+import Credentials from "next-auth/providers/credentials";
+import GitHub from "next-auth/providers/github";
+import bcrypt from "bcryptjs";
+import { loginSchema } from "@/lib/validation";
 
-const secretKey = "secret"; // In production, use process.env.JWT_SECRET
-const key = new TextEncoder().encode(secretKey);
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    GitHub, // NextAuth v5 map automatiquement AUTH_GITHUB_ID et AUTH_GITHUB_SECRET
+    Credentials({
+      name: "Credentials",
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const result = loginSchema.safeParse(credentials);
+        
+        if (!result.success) return null;
 
-export async function encrypt(payload: any) {
-  return await new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("2h")
-    .sign(key);
-}
+        const { username, password } = result.data;
 
-export async function decrypt(input: string): Promise<any> {
-  const { payload } = await jwtVerify(input, key, {
-    algorithms: ["HS256"],
-  });
-  return payload;
-}
+        const user = await prisma.user.findUnique({
+          where: { username },
+        });
 
-export async function login(user: { id: string; username: string }) {
-  // Create the session
-  const expires = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours from now
-  const session = await encrypt({ user, expires });
+        if (!user || !user.password) return null;
 
-  // Save the session in a cookie
-  (await cookies()).set("session", session, { expires, httpOnly: true });
-}
+        const isValid = await bcrypt.compare(password, user.password);
 
-export async function logout() {
-  // Destroy the session
-  (await cookies()).set("session", "", { expires: new Date(0) });
-}
+        if (!isValid) return null;
 
-export async function getSession() {
-  const session = (await cookies()).get("session")?.value;
-  if (!session) return null;
-  return await decrypt(session);
-}
-
-export async function updateSession(request: NextRequest) {
-  const session = request.cookies.get("session")?.value;
-  if (!session) return;
-
-  // Refresh the session so it doesn't expire
-  const parsed = await decrypt(session);
-  parsed.expires = new Date(Date.now() + 2 * 60 * 60 * 1000);
-  const res = NextResponse.next();
-  res.cookies.set({
-    name: "session",
-    value: await encrypt(parsed),
-    httpOnly: true,
-    expires: parsed.expires,
-  });
-  return res;
-}
+        return {
+          id: user.id,
+          name: user.username,
+          username: user.username,
+        };
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.username = (user as any).username || user.name || token.name || "";
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        (session.user as any).id = token.id;
+        (session.user as any).username = token.username;
+      }
+      return session;
+    },
+  },
+  session: {
+    strategy: "jwt",
+  },
+  pages: {
+    signIn: "/login",
+  },
+  debug: true,
+  trustHost: true,
+});
