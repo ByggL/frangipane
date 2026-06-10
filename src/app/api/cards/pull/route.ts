@@ -1,8 +1,29 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+<<<<<<< Updated upstream
+=======
+import { auth } from "@/lib/auth";
+>>>>>>> Stashed changes
 
 export async function GET() {
   try {
+<<<<<<< Updated upstream
+=======
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get user and check money
+    const user = await prisma.user.findUnique({
+      where: { id: (session.user as any).id },
+    });
+
+    if (!user || user.money < PULL_COST) {
+      return NextResponse.json({ error: "Insufficient funds" }, { status: 400 });
+    }
+
+>>>>>>> Stashed changes
     // Get total count of cards
     const count = await prisma.wrestlerCard.count();
     
