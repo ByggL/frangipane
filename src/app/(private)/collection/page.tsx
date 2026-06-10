@@ -6,8 +6,8 @@ import Link from "next/link";
 import { getRarityStyles, getAlignmentBadge } from "@/lib/utils";
 
 export default function CollectionPage() {
-  const [collection, setCollection] = useState<Card[]>([]);
-  const [filteredCollection, setFilteredCollection] = useState<Card[]>([]);
+  const [collection, setCollection] = useState<(Card & { quantity: number })[]>([]);
+  const [filteredCollection, setFilteredCollection] = useState<(Card & { quantity: number })[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filter & Sort State
@@ -16,10 +16,16 @@ export default function CollectionPage() {
   const [sortBy, setSortBy] = useState("DATE_DESC");
 
   useEffect(() => {
-    const savedCollection = JSON.parse(localStorage.getItem("wrestler_collection") || "[]");
-    setCollection(savedCollection);
-    setFilteredCollection(savedCollection);
-    setLoading(false);
+    fetch("/api/user/collection")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCollection(data);
+          setFilteredCollection(data);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -118,6 +124,11 @@ export default function CollectionPage() {
                   href={`/roster/${card.id}`}
                   className={`group relative flex flex-col h-[460px] rounded-2xl border-2 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer overflow-hidden ${styles.bg} ${styles.border} ${styles.glow}`}
                 >
+                  {card.quantity > 1 && (
+                    <div className="absolute top-4 right-4 z-20 bg-white text-black px-2 py-1 rounded-md text-[10px] font-black">
+                      x{card.quantity}
+                    </div>
+                  )}
                   <div className="p-4 flex justify-between items-start z-10">
                     <div className="flex flex-col gap-1">
                       <h2 className="font-serif font-bold text-lg leading-none text-zinc-100 group-hover:text-white transition-colors">
