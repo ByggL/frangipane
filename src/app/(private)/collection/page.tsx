@@ -27,8 +27,8 @@ export default async function CollectionPage({
       AND: [
         search ? {
           OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { promotion: { contains: search, mode: 'insensitive' } },
+            { name: { contains: search } },
+            { promotion: { contains: search } },
           ]
         } : {},
         rarity !== "ALL" ? { rarity: { equals: rarity } } : {},

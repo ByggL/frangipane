@@ -50,13 +50,13 @@ export async function POST() {
     }
 
     // 1. Fetch all cards metadata
-    const allCards = await prisma.wrestlerCard.findMany({
+    const allCards = await (prisma.wrestlerCard.findMany({
       select: {
         id: true,
         rarity: true,
         gender: true,
-      },
-    });
+      } as any,
+    }) as any);
 
     // 2. Separate into pools
     const pools: Record<string, Record<string, string[]>> = {
@@ -64,7 +64,7 @@ export async function POST() {
       Female: { COMMON: [], UNCOMMON: [], RARE: [], EPIC: [], LEGENDARY: [] },
     };
 
-    allCards.forEach((card) => {
+    allCards.forEach((card: any) => {
       if (pools[card.gender] && pools[card.gender][card.rarity]) {
         pools[card.gender][card.rarity].push(card.id);
       }
