@@ -9,7 +9,7 @@ import { loginSchema } from "@/lib/validation";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
-    GitHub, // NextAuth v5 map automatiquement AUTH_GITHUB_ID et AUTH_GITHUB_SECRET
+    GitHub({}), 
     Credentials({
       name: "Credentials",
       credentials: {
@@ -42,10 +42,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id;
-        token.username = (user as any).username || user.name || token.name || "";
+        token.id = user.id as string;
+        token.username = (user as any).username || user.name || "";
       }
       return token;
     },
