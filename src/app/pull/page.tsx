@@ -28,15 +28,20 @@ export default function PullPage() {
   const handleStartPull = async () => {
     setPackState("fetching");
     try {
-      const res = await fetch("/api/cards/pull");
-      const newCards: Card[] = await res.json();
-      setPulledCards(newCards);
+      const res = await fetch("/api/cards/pull", { method: "POST" });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        alert(data.error || "Failed to pull cards");
+        setPackState("idle");
+        return;
+      }
+
+      setPulledCards(data);
       setPackState("sealed");
       
-      // Store in LocalStorage
-      const existingCollection = JSON.parse(localStorage.getItem("wrestler_collection") || "[]");
-      const updatedCollection = [...existingCollection, ...newCards];
-      localStorage.setItem("wrestler_collection", JSON.stringify(updatedCollection));
+      // Update global user state (money) by triggering a refresh
+      window.dispatchEvent(new Event("user-updated"));
     } catch (err) {
       console.error("Failed to pull cards:", err);
       setPackState("idle");
