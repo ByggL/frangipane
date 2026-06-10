@@ -1,7 +1,5 @@
-"use client";
-
-import { Card } from "@/lib/types";
-import { useEffect, useState } from "react";
+import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import Link from "next/link";
 import { getRarityStyles, getAlignmentBadge } from "@/lib/utils";
 import Image from "next/image";
@@ -15,10 +13,7 @@ export default function Page() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Filter & Sort State
-  const [search, setSearch] = useState("");
-  const [rarityFilter, setRarityFilter] = useState("ALL");
-  const [sortBy, setSortBy] = useState("NAME_ASC");
+  const skip = (page - 1) * limit;
 
   const fetchCards = async () => {
     setLoading(true);
@@ -35,27 +30,11 @@ export default function Page() {
       setCards(data.cards);
       setTotalPages(data.pagination.totalPages);
       setTotalCount(data.pagination.total);
-      setLoading(false);
     } catch (err) {
       console.error(err);
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchCards();
-  }, [page, sortBy, rarityFilter]); // Fetch on structural changes
-
-  // Debounced search effect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (page !== 1)
-        setPage(1); // Reset to first page on new search
-      else fetchCards();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
-
   if (loading && cards.length === 0) {
     return (
       <main className="p-8 flex items-center justify-center min-h-screen bg-[#0a0a0a]">
@@ -65,10 +44,29 @@ export default function Page() {
       </main>
     );
   }
+  
+  switch (sortBy) {
+    case "NAME_ASC": orderBy.push({ name: "asc" }); break;
+    case "NAME_DESC": orderBy.push({ name: "desc" }); break;
+    case "HEIGHT_DESC": orderBy.push({ height: "desc" }); break;
+    case "WEIGHT_DESC": orderBy.push({ weight: "desc" }); break;
+    default: orderBy.push({ name: "asc" });
+  }
+
+  const [cards, totalCount] = await Promise.all([
+    prisma.wrestlerCard.findMany({
+      where,
+      take: limit,
+      skip: skip,
+      orderBy,
+    }),
+    prisma.wrestlerCard.count({ where }),
+  ]);
+
+  const totalPages = Math.ceil(totalCount / limit);
 
   return (
     <main className="relative p-8 bg-[#0a0a0a] min-h-screen overflow-hidden">
-      {/* Background Texture Overlay */}
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
@@ -170,21 +168,17 @@ export default function Page() {
                 {/* Subtle Gradient Overlay */}
                 <div className="absolute inset-0 bg-linear-to-b from-white/3 to-transparent pointer-events-none"></div>
 
-                {/* Header: Name and Alignment */}
                 <div className="p-4 flex justify-between items-start z-10">
                   <div className="flex flex-col gap-1">
                     <h2 className="font-serif font-bold text-lg leading-none text-zinc-100 group-hover:text-white transition-colors">
                       {card.name}
                     </h2>
-                    <span
-                      className={`text-[9px] w-fit px-2 py-0.5 rounded-full font-black uppercase tracking-tighter ${getAlignmentBadge(card.alignment)}`}
-                    >
+                    <span className={`text-[9px] w-fit px-2 py-0.5 rounded-full font-black uppercase tracking-tighter ${getAlignmentBadge(card.alignment)}`}>
                       {card.alignment}
                     </span>
                   </div>
                 </div>
 
-                {/* Portrait Container */}
                 <div className="relative flex-1 mx-4 mb-2 rounded-xl overflow-hidden bg-zinc-950 border border-white/5 shadow-2xl">
                   {card.imageUrl ? (
                     <Image
@@ -204,20 +198,15 @@ export default function Page() {
                     />
                   ) : null}
 
-                  {/* Empty/Error State Placeholder */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-10 transition-opacity duration-700">
                     <span className="text-4xl font-serif font-black text-white italic opacity-20">VOID</span>
                   </div>
 
-                  {/* Rarity Tag */}
-                  <div
-                    className={`absolute bottom-2 right-2 px-2 py-1 rounded border border-white/10 text-[9px] font-black tracking-widest uppercase backdrop-blur-md ${styles.accent} ${styles.text}`}
-                  >
+                  <div className={`absolute bottom-2 right-2 px-2 py-1 rounded border border-white/10 text-[9px] font-black tracking-widest uppercase backdrop-blur-md ${styles.accent} ${styles.text}`}>
                     {card.rarity}
                   </div>
                 </div>
 
-                {/* Stats Grid */}
                 <div className="p-5 bg-black/40 backdrop-blur-sm z-10 border-t border-white/5">
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                     <div className="flex flex-col">

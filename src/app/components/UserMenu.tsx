@@ -1,50 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 
-interface UserData {
-  id: string;
-  username: string;
-  money: number;
-}
-
 export default function UserMenu() {
-  const { data: session, status } = useSession();
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [loadingData, setLoadingData] = useState(false);
-  const router = useRouter();
+  const { data: session, status, update } = useSession();
 
-  const fetchUserExtraData = () => {
+  const syncUserMoney = async () => {
     if (status === "authenticated") {
-      setLoadingData(true);
-      fetch("/api/user/me")
-        .then((res) => res.json())
-        .then((data) => {
-          setUserData(data.user);
-          setLoadingData(false);
-        })
-        .catch(() => setLoadingData(false));
-    } else {
-      setUserData(null);
+      const res = await fetch("/api/user/me");
+      const data = await res.json();
+      if (data.user) {
+        await update({ money: data.user.money });
+      }
     }
   };
 
   useEffect(() => {
-    fetchUserExtraData();
-    window.addEventListener("user-updated", fetchUserExtraData);
-    return () => window.removeEventListener("user-updated", fetchUserExtraData);
+    window.addEventListener("user-updated", syncUserMoney);
+    return () => window.removeEventListener("user-updated", syncUserMoney);
   }, [status]);
 
-  const handleLogout = async () => {
-    await signOut({ redirect: false });
-    router.push("/");
-    router.refresh();
-  };
-
-  if (status === "loading" || loadingData) {
+  if (status === "loading") {
     return (
       <div className="h-10 px-4 bg-white/5 animate-pulse rounded-full"></div>
     );
@@ -69,18 +47,20 @@ export default function UserMenu() {
     );
   }
 
+  const user = session?.user as any;
+
   return (
     <div className="flex items-center gap-4">
       <div className="flex flex-col items-end">
         <span className="text-white text-[10px] font-black uppercase tracking-widest">
-          {userData?.username || session?.user?.name}
+          {user?.username || user?.name}
         </span>
         <span className="text-yellow-500 text-[10px] font-black uppercase tracking-widest">
-          ${userData?.money.toLocaleString() || "0"}
+          ${user?.money?.toLocaleString() || "0"}
         </span>
       </div>
       <button
-        onClick={handleLogout}
+        onClick={() => signOut({ callbackUrl: "/" })}
         className="text-zinc-500 hover:text-red-500 transition-colors"
         title="Logout"
       >
