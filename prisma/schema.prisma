@@ -32,8 +32,6 @@ model WrestlerCard {
   imageUrl    String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-<<<<<<< Updated upstream
-=======
   owners      UserCard[]
 }
 
@@ -100,5 +98,4 @@ model UserCard {
   card      WrestlerCard @relation(fields: [cardId], references: [id])
 
   @@unique([userId, cardId])
->>>>>>> Stashed changes
 }

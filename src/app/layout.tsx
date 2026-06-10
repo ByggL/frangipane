@@ -47,9 +47,7 @@ export default function RootLayout({
               </div>
 
             <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-full border border-white/5 bg-zinc-900 flex items-center justify-center cursor-not-allowed opacity-50">
-                <div className="h-1.5 w-1.5 bg-zinc-700 rounded-full"></div>
-              </div>
+              <UserMenu />
             </div>
           </nav>
         </header>

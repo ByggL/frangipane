@@ -12,4 +12,5 @@ export type Card = {
   imageUrl: string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
+  quantity?: number;
 };
