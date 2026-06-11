@@ -1,7 +1,7 @@
 "use client";
 
-import RosterFilters from "./RosterFilters";
-import RosterList, { RosterListSkeleton } from "./RosterList";
+import RosterFilters from "../../components/RosterFilters";
+import RosterList, { RosterListSkeleton } from "../../components/RosterList";
 import { Suspense, useState, useCallback, use } from "react";
 
 export default function RosterPage({
