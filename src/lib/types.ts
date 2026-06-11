@@ -7,6 +7,7 @@ export type Card = {
   birthdate: string;
   birthplace: string;
   rarity: string;
+  gender: string;
   alignment: string;
   promotion: string | null;
   imageUrl: string | null;
