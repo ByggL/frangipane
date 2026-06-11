@@ -13,14 +13,7 @@ interface RosterListProps {
   onDataLoaded?: (totalCount: number, totalPages: number) => void;
 }
 
-export default function RosterList({
-  search,
-  rarity,
-  sortBy,
-  page,
-  limit,
-  onDataLoaded,
-}: RosterListProps) {
+export default function RosterList({ search, rarity, sortBy, page, limit, onDataLoaded }: RosterListProps) {
   const [cards, setCards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,7 +28,9 @@ export default function RosterList({
           page: page.toString(),
           limit: limit.toString(),
         });
-        const res = await fetch(`/api/cards?${params.toString()}`);
+        const res = await fetch(`/api/cards?${params.toString()}`, {
+          next: { revalidate: 3600, tags: ["roster"] },
+        });
         const data = await res.json();
         setCards(data.cards || []);
         if (onDataLoaded) {
@@ -72,7 +67,9 @@ export default function RosterList({
                 <h2 className="font-serif font-bold text-lg leading-none text-zinc-100 group-hover:text-white transition-colors">
                   {card.name}
                 </h2>
-                <span className={`text-[9px] w-fit px-2 py-0.5 rounded-full font-black uppercase tracking-tighter ${getAlignmentBadge(card.alignment)}`}>
+                <span
+                  className={`text-[9px] w-fit px-2 py-0.5 rounded-full font-black uppercase tracking-tighter ${getAlignmentBadge(card.alignment)}`}
+                >
                   {card.alignment}
                 </span>
               </div>
@@ -91,7 +88,9 @@ export default function RosterList({
                 <span className="text-4xl font-serif font-black text-white italic opacity-20">VOID</span>
               </div>
 
-              <div className={`absolute bottom-2 right-2 px-2 py-1 rounded border border-white/10 text-[9px] font-black tracking-widest uppercase backdrop-blur-md ${styles.accent} ${styles.text}`}>
+              <div
+                className={`absolute bottom-2 right-2 px-2 py-1 rounded border border-white/10 text-[9px] font-black tracking-widest uppercase backdrop-blur-md ${styles.accent} ${styles.text}`}
+              >
                 {card.rarity}
               </div>
             </div>

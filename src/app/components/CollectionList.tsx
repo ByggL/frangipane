@@ -12,12 +12,7 @@ interface CollectionListProps {
   sortBy: string;
 }
 
-export default function CollectionList({
-  userId,
-  search,
-  rarity,
-  sortBy,
-}: CollectionListProps) {
+export default function CollectionList({ userId, search, rarity, sortBy }: CollectionListProps) {
   const [collection, setCollection] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +25,9 @@ export default function CollectionList({
           rarity,
           sortBy,
         });
-        const res = await fetch(`/api/user/collection?${params.toString()}`);
+        const res = await fetch(`/api/user/collection?${params.toString()}`, {
+          next: { revalidate: 600, tags: ["collection", userId] },
+        });
         const data = await res.json();
         if (Array.isArray(data)) {
           setCollection(data);
@@ -113,9 +110,7 @@ export default function CollectionList({
             </div>
 
             <div className="p-5 bg-black/40 backdrop-blur-sm z-10 border-t border-white/5">
-              <p className="font-serif text-xs text-zinc-400 italic truncate mb-2">
-                {card.promotion || "Independent"}
-              </p>
+              <p className="font-serif text-xs text-zinc-400 italic truncate mb-2">{card.promotion || "Independent"}</p>
               <div className="grid grid-cols-2 gap-2 text-[10px] uppercase font-black tracking-tighter text-zinc-600">
                 <span>{card.height} cm</span>
                 <span>{card.weight} kg</span>

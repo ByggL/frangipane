@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  cacheComponents: true,
+  devIndicators: false,
 };
 
 export default nextConfig;
