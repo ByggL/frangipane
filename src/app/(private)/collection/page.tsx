@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
-import CollectionFilters from "./CollectionFilters";
+import CollectionFilters from "../../components/CollectionFilters";
 import { redirect } from "next/navigation";
-import CollectionList, { CollectionListSkeleton } from "./CollectionList";
+import CollectionList, { CollectionListSkeleton } from "../../components/CollectionList";
 import { Suspense } from "react";
 
 export default async function CollectionPage({
@@ -32,12 +32,7 @@ export default async function CollectionPage({
         </header>
 
         <Suspense key={`${search}-${rarity}-${sortBy}`} fallback={<CollectionListSkeleton />}>
-          <CollectionList 
-            userId={(session.user as any).id}
-            search={search}
-            rarity={rarity}
-            sortBy={sortBy}
-          />
+          <CollectionList userId={(session.user as any).id} search={search} rarity={rarity} sortBy={sortBy} />
         </Suspense>
       </div>
     </main>

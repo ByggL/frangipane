@@ -1,5 +1,5 @@
 import Link from "next/link";
-import WrestlerDetail, { WrestlerDetailSkeleton } from "./WrestlerDetail";
+import WrestlerDetail, { WrestlerDetailSkeleton } from "../../../components/WrestlerDetail";
 import { Suspense } from "react";
 
 export default async function WrestlerPage({ params }: { params: Promise<{ id: string }> }) {
