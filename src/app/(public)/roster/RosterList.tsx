@@ -1,7 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/generated/prisma/client";
 import { getRarityStyles, getAlignmentBadge } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface RosterListProps {
   search: string;
@@ -9,46 +10,50 @@ interface RosterListProps {
   sortBy: string;
   page: number;
   limit: number;
+  onDataLoaded?: (totalCount: number, totalPages: number) => void;
 }
 
-export default async function RosterList({
+export default function RosterList({
   search,
   rarity,
   sortBy,
   page,
   limit,
+  onDataLoaded,
 }: RosterListProps) {
-  const skip = (page - 1) * limit;
+  const [cards, setCards] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const where: Prisma.WrestlerCardWhereInput = {
-    AND: [
-      search
-        ? {
-            OR: [
-              { name: { contains: search } },
-              { promotion: { contains: search } },
-            ],
-          }
-        : {},
-      rarity !== "ALL" ? { rarity: { equals: rarity } } : {},
-    ],
-  };
+  useEffect(() => {
+    const fetchCards = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          search,
+          rarity,
+          sortBy,
+          page: page.toString(),
+          limit: limit.toString(),
+        });
+        const res = await fetch(`/api/cards?${params.toString()}`);
+        const data = await res.json();
+        setCards(data.cards || []);
+        if (onDataLoaded) {
+          onDataLoaded(data.totalCount || 0, data.totalPages || 0);
+        }
+      } catch (error) {
+        console.error("Failed to fetch cards:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  let orderBy: Prisma.WrestlerCardOrderByWithRelationInput[] = [{ imageUrl: "desc" }];
-  switch (sortBy) {
-    case "NAME_ASC": orderBy.push({ name: "asc" }); break;
-    case "NAME_DESC": orderBy.push({ name: "desc" }); break;
-    case "HEIGHT_DESC": orderBy.push({ height: "desc" }); break;
-    case "WEIGHT_DESC": orderBy.push({ weight: "desc" }); break;
-    default: orderBy.push({ name: "asc" });
+    fetchCards();
+  }, [search, rarity, sortBy, page, limit, onDataLoaded]);
+
+  if (loading) {
+    return <RosterListSkeleton />;
   }
-
-  const cards = await prisma.wrestlerCard.findMany({
-    where,
-    take: limit,
-    skip: skip,
-    orderBy,
-  });
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-10">

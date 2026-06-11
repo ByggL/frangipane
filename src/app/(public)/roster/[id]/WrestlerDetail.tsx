@@ -1,16 +1,39 @@
-import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
+"use client";
+
 import { getRarityStyles, getAlignmentBadge } from "@/lib/utils";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { notFound } from "next/navigation";
 
-export default async function WrestlerDetail({ id }: { id: string }) {
-  const card = await prisma.wrestlerCard.findUnique({
-    where: { id },
-  });
+export default function WrestlerDetail({ id }: { id: string }) {
+  const [card, setCard] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  if (!card) {
-    notFound();
-  }
+  useEffect(() => {
+    const fetchCard = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/cards/${id}`);
+        if (!res.ok) {
+          if (res.status === 404) notFound();
+          throw new Error("Failed to fetch card");
+        }
+        const data = await res.json();
+        setCard(data);
+      } catch (err) {
+        console.error(err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCard();
+  }, [id]);
+
+  if (loading) return <WrestlerDetailSkeleton />;
+  if (error || !card) return <div>Error loading wrestler details.</div>;
 
   const styles = getRarityStyles(card.rarity);
 

@@ -1,8 +1,9 @@
-import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/generated/prisma/client";
+"use client";
+
 import Link from "next/link";
 import { getRarityStyles, getAlignmentBadge } from "@/lib/utils";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 interface CollectionListProps {
   userId: string;
@@ -11,49 +12,42 @@ interface CollectionListProps {
   sortBy: string;
 }
 
-export default async function CollectionList({
+export default function CollectionList({
   userId,
   search,
   rarity,
   sortBy,
 }: CollectionListProps) {
-  // Build where clause
-  const where: Prisma.UserCardWhereInput = {
-    userId,
-    card: {
-      AND: [
-        search ? {
-          OR: [
-            { name: { contains: search } },
-            { promotion: { contains: search } },
-          ]
-        } : {},
-        rarity !== "ALL" ? { rarity: { equals: rarity } } : {},
-      ]
-    }
-  };
+  const [collection, setCollection] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Determine sort
-  let orderBy: Prisma.UserCardOrderByWithRelationInput = {};
-  switch (sortBy) {
-    case "NAME_ASC": orderBy = { card: { name: "asc" } }; break;
-    case "NAME_DESC": orderBy = { card: { name: "desc" } }; break;
-    case "DATE_DESC": orderBy = { updatedAt: "desc" }; break;
-    default: orderBy = { updatedAt: "desc" };
+  useEffect(() => {
+    const fetchCollection = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          search,
+          rarity,
+          sortBy,
+        });
+        const res = await fetch(`/api/user/collection?${params.toString()}`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setCollection(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch collection:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCollection();
+  }, [search, rarity, sortBy]);
+
+  if (loading) {
+    return <CollectionListSkeleton />;
   }
-
-  const userCards = await prisma.userCard.findMany({
-    where,
-    include: {
-      card: true,
-    },
-    orderBy,
-  });
-
-  const collection = userCards.map((uc) => ({
-    ...uc.card,
-    quantity: uc.quantity,
-  }));
 
   if (collection.length === 0) {
     return (

@@ -1,60 +1,49 @@
-import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/generated/prisma/client";
+"use client";
+
 import RosterFilters from "./RosterFilters";
 import RosterList, { RosterListSkeleton } from "./RosterList";
-import { Suspense } from "react";
+import { Suspense, useState, useCallback, use } from "react";
 
-export default async function Page({
+export default function RosterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  searchParams: Promise<{ search?: string; rarity?: string; sortBy?: string; page?: string }>;
 }) {
-  const params = await searchParams;
-  const page = parseInt((params.page as string) || "1", 10);
+  const params = use(searchParams);
+  const page = parseInt(params.page || "1", 10);
   const limit = 50;
-  const search = (params.search as string) || "";
-  const rarity = (params.rarity as string) || "ALL";
-  const sortBy = (params.sortBy as string) || "NAME_ASC";
+  const search = params.search || "";
+  const rarity = params.rarity || "ALL";
+  const sortBy = params.sortBy || "NAME_ASC";
 
-  // Build where clause for count
-  const where: Prisma.WrestlerCardWhereInput = {
-    AND: [
-      search
-        ? {
-            OR: [
-              { name: { contains: search } },
-              { promotion: { contains: search } },
-            ],
-          }
-        : {},
-      rarity !== "ALL" ? { rarity: { equals: rarity } } : {},
-    ],
-  };
+  const [pagination, setPagination] = useState({ totalCount: 0, totalPages: 1 });
 
-  const totalCount = await prisma.wrestlerCard.count({ where });
-  const totalPages = Math.ceil(totalCount / limit);
+  const handleDataLoaded = useCallback((totalCount: number, totalPages: number) => {
+    setPagination({ totalCount, totalPages });
+  }, []);
 
   return (
     <main className="relative p-8 bg-[#0a0a0a] min-h-screen overflow-hidden">
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
-      
+
       <div className="max-w-7xl mx-auto relative z-10">
-        <RosterFilters 
+        <RosterFilters
           search={search}
           rarity={rarity}
           sortBy={sortBy}
-          totalCount={totalCount}
+          totalCount={pagination.totalCount}
           page={page}
-          totalPages={totalPages}
+          totalPages={pagination.totalPages}
         />
 
         <Suspense key={`${search}-${rarity}-${sortBy}-${page}`} fallback={<RosterListSkeleton />}>
-          <RosterList 
+          <RosterList
             search={search}
             rarity={rarity}
             sortBy={sortBy}
             page={page}
             limit={limit}
+            onDataLoaded={handleDataLoaded}
           />
         </Suspense>
       </div>
